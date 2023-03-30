@@ -1,4 +1,6 @@
 import playPauseButton from "./nuts-and-bolts/play-pause";
+import SimpleSynth from "./nuts-and-bolts/simple-synth";
+import bpmInput from "./nuts-and-bolts/bpm-input";
 
 function checkForWebAudio() {
   let hasWebAudio = !!window.AudioContext;
@@ -11,16 +13,29 @@ function checkForWebAudio() {
 }
 
 const audioContext = new AudioContext();
+window.audioContext = audioContext;
+const synth = new SimpleSynth(audioContext);
+window.synth = synth;
 
 let loopStarted = 0;
 let timePassed = 0;
-const bpm = 90;
-const bps = bpm / 60;
-const notesPerBeat = 4;
-const beatLength = 1/bps;
+let bpm = 120;
+
+const getBps = () => bpm / 60;
+const numberOfNotesPerBeat = 4;
+const getBeatLength = () => 1/getBps();
+const getNoteLength = () => getBeatLength()/numberOfNotesPerBeat;
+
+let lastBeatPlayed = 0;
 
 function frame() {
   timePassed = audioContext.currentTime - loopStarted;
+  const beatNumber = Math.floor(timePassed / getNoteLength());
+
+  if(lastBeatPlayed != beatNumber) {
+    synth.play(69, audioContext.currentTime, 0.25);
+    lastBeatPlayed = beatNumber;
+  }
 }
 
 function loop() {
@@ -32,7 +47,10 @@ const printState = () => {
   console.log('timePassed', timePassed);
   console.log('loopStarted', loopStarted);
   console.log(audioContext.state);
-  console.log('beatLength', beatLength);
+  console.log('beatLength', getBeatLength());
+  console.log('noteLength', getNoteLength());
+  console.log('bps', getBps());
+  console.log('bpm', bpm);
 }
 
 const onPlay = () => {
@@ -49,6 +67,12 @@ function init() {
   checkForWebAudio(); // You can delete this after you've checked that WebAudio is ok.
   playPauseButton(onPlay, onPause);
   printState();
+  loopStarted = audioContext.currentTime;
+  bpmInput(bpm, (x) => {
+    bpm = x;
+    printState();
+  });
+
 }
 
 window.ac = audioContext;
