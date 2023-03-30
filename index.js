@@ -1,3 +1,5 @@
+import playPauseButton from "./nuts-and-bolts/play-pause";
+
 function checkForWebAudio() {
   let hasWebAudio = !!window.AudioContext;
 
@@ -8,16 +10,48 @@ function checkForWebAudio() {
   document.body.appendChild(messageContainer);
 }
 
-function frame() {}
+const audioContext = new AudioContext();
+
+let loopStarted = 0;
+let timePassed = 0;
+const bpm = 90;
+const bps = bpm / 60;
+const notesPerBeat = 4;
+const beatLength = 1/bps;
+
+function frame() {
+  timePassed = audioContext.currentTime - loopStarted;
+}
 
 function loop() {
   requestAnimationFrame(loop);
   frame();
 }
 
+const printState = () => {
+  console.log('timePassed', timePassed);
+  console.log('loopStarted', loopStarted);
+  console.log(audioContext.state);
+  console.log('beatLength', beatLength);
+}
+
+const onPlay = () => {
+  audioContext.resume();
+  printState();
+}
+
+const onPause = () => {
+  audioContext.suspend();
+  printState();
+}
+
 function init() {
   checkForWebAudio(); // You can delete this after you've checked that WebAudio is ok.
+  playPauseButton(onPlay, onPause);
+  printState();
 }
+
+window.ac = audioContext;
 
 init();
 loop();
